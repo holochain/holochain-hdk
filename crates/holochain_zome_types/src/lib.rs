@@ -1,10 +1,7 @@
+pub mod debug;
+pub mod globals;
+pub mod hash;
+mod zome_io;
+
 use holochain_serialized_bytes::prelude::*;
-
-#[derive(Clone, Debug, Serialize, Deserialize, SerializedBytes, PartialEq)]
-pub struct WasmExternResponse(SerializedBytes);
-
-impl WasmExternResponse {
-    pub fn new(serialized_bytes: SerializedBytes) -> Self {
-        Self(serialized_bytes)
-    }
-}
+pub use zome_io::*;
