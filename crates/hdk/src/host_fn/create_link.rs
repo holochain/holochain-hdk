@@ -1,4 +1,4 @@
-use crate::hdk3::prelude::*;
+use crate::prelude::*;
 
 /// Create a link from a base entry to a target entry, with an optional tag.
 ///

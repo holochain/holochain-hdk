@@ -1,4 +1,4 @@
-use crate::hdk3::prelude::*;
+use crate::prelude::*;
 
 /// Gets an element for a given entry or header hash.
 ///

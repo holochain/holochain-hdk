@@ -1,4 +1,4 @@
-use crate::hdk3::prelude::*;
+use crate::prelude::*;
 
 /// Trivial wrapper for __agent_info host function.
 /// Agent info input struct is `()` so the function call simply looks like this:

@@ -1,4 +1,4 @@
-use crate::hdk3::prelude::*;
+use crate::prelude::*;
 
 /// Get the zome information.
 /// There are no inputs to zome_info.

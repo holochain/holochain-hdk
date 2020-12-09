@@ -1,4 +1,4 @@
-use crate::hdk3::prelude::*;
+use crate::prelude::*;
 
 /// Create a CapClaim on the local source chain.
 ///

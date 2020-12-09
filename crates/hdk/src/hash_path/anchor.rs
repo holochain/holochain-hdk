@@ -1,6 +1,6 @@
-use crate::hdk3::hash_path::path::Component;
-use crate::hdk3::hash_path::path::Path;
-use crate::hdk3::prelude::*;
+use crate::hash_path::path::Component;
+use crate::hash_path::path::Path;
+use crate::prelude::*;
 use holochain_wasmer_guest::*;
 
 /// "hdk3anchor"
@@ -22,7 +22,7 @@ impl From<&Anchor> for Path {
     fn from(anchor: &Anchor) -> Self {
         Self::from(&format!(
             "{1}{0}{2}{0}{3}",
-            crate::hdk3::hash_path::path::DELIMITER,
+            crate::hash_path::path::DELIMITER,
             ROOT,
             anchor.anchor_type,
             anchor.anchor_text.as_ref().unwrap_or(&String::default())

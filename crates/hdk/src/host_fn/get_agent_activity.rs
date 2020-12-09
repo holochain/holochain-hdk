@@ -1,4 +1,4 @@
-use crate::hdk3::prelude::*;
+use crate::prelude::*;
 
 pub fn get_agent_activity(
     agent: AgentPubKey,
