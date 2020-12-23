@@ -60,12 +60,12 @@ pub mod zome_io;
 #[cfg(feature = "fixturators")]
 pub mod fixt;
 
+#[cfg(feature = "test_utils")]
 pub mod test_utils;
 
 pub use entry::Entry;
 pub use header::Header;
-use holochain_serialized_bytes::prelude::*;
-pub use zome_io::*;
+pub use prelude::*;
 
 #[allow(missing_docs)]
 pub trait CallbackResult {

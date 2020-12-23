@@ -2,8 +2,11 @@
 //!
 //! We don't use fixturators for these, because this crate defines no fixturators
 
-use crate::capability::{CapSecret, CAP_SECRET_BYTES};
-use holo_hash::{hash_type, *};
+use crate::capability::CapSecret;
+use crate::capability::CAP_SECRET_BYTES;
+use crate::cell::CellId;
+use holo_hash::hash_type;
+use holo_hash::*;
 use holochain_serialized_bytes::prelude::*;
 
 fn fake_holo_hash<T: holo_hash::HashType>(name: u8, hash_type: T) -> HoloHash<T> {
@@ -50,4 +53,9 @@ pub fn fake_agent_pubkey_2() -> AgentPubKey {
 /// A fixture CapSecret for unit testing.
 pub fn fake_cap_secret() -> CapSecret {
     [0; CAP_SECRET_BYTES].into()
+}
+
+/// A fixture example CellId for unit testing.
+pub fn fake_cell_id(name: u8) -> CellId {
+    (fake_dna_hash(name), fake_agent_pubkey_1()).into()
 }
