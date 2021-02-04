@@ -1,5 +1,5 @@
-use crate::header::CreateLink;
-use crate::header::DeleteLink;
+use crate::element::SignedHeaderHashed;
+use holo_hash::HeaderHash;
 use holochain_serialized_bytes::prelude::*;
 
 /// Opaque tag for the link applied at the app layer, used to differentiate
@@ -34,6 +34,12 @@ impl From<Vec<u8>> for LinkTag {
     }
 }
 
+impl From<()> for LinkTag {
+    fn from(_: ()) -> Self {
+        Self(Vec::new())
+    }
+}
+
 impl AsRef<Vec<u8>> for LinkTag {
     fn as_ref(&self) -> &Vec<u8> {
         &self.0
@@ -59,6 +65,48 @@ pub struct Link {
     pub timestamp: std::time::SystemTime,
     /// A tag used to find this link
     pub tag: LinkTag,
+    /// The hash of this link's create header
+    pub create_link_hash: HeaderHash,
+}
+
+/// Zome IO inner type for link creation.
+#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
+pub struct CreateLinkInput {
+    pub base_address: holo_hash::EntryHash,
+    pub target_address: holo_hash::EntryHash,
+    pub tag: LinkTag,
+}
+
+impl CreateLinkInput {
+    pub fn new(
+        base_address: holo_hash::EntryHash,
+        target_address: holo_hash::EntryHash,
+        tag: LinkTag,
+    ) -> Self {
+        Self {
+            base_address,
+            target_address,
+            tag,
+        }
+    }
+}
+
+#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
+pub struct GetLinksInput {
+    pub base_address: holo_hash::EntryHash,
+    pub tag_prefix: Option<crate::link::LinkTag>,
+}
+
+impl GetLinksInput {
+    pub fn new(
+        base_address: holo_hash::EntryHash,
+        tag_prefix: Option<crate::link::LinkTag>,
+    ) -> Self {
+        Self {
+            base_address,
+            tag_prefix,
+        }
+    }
 }
 
 #[derive(serde::Serialize, serde::Deserialize, SerializedBytes, PartialEq, Clone, Debug)]
@@ -82,23 +130,26 @@ impl Links {
     }
 }
 
+type CreateLinkWithDeleteLinks = Vec<(SignedHeaderHashed, Vec<SignedHeaderHashed>)>;
 #[derive(Clone, PartialEq, Debug, serde::Serialize, serde::Deserialize, SerializedBytes)]
-pub struct LinkDetails(Vec<(CreateLink, Vec<DeleteLink>)>);
+/// CreateLinks with and DeleteLinks on them
+/// `[CreateLink, [DeleteLink]]`
+pub struct LinkDetails(CreateLinkWithDeleteLinks);
 
-impl From<Vec<(CreateLink, Vec<DeleteLink>)>> for LinkDetails {
-    fn from(v: Vec<(CreateLink, Vec<DeleteLink>)>) -> Self {
+impl From<CreateLinkWithDeleteLinks> for LinkDetails {
+    fn from(v: CreateLinkWithDeleteLinks) -> Self {
         Self(v)
     }
 }
 
-impl From<LinkDetails> for Vec<(CreateLink, Vec<DeleteLink>)> {
+impl From<LinkDetails> for CreateLinkWithDeleteLinks {
     fn from(link_details: LinkDetails) -> Self {
         link_details.0
     }
 }
 
 impl LinkDetails {
-    pub fn into_inner(self) -> Vec<(CreateLink, Vec<DeleteLink>)> {
+    pub fn into_inner(self) -> CreateLinkWithDeleteLinks {
         self.into()
     }
 }

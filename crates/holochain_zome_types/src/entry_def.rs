@@ -1,5 +1,6 @@
 use crate::crdt::CrdtType;
-use crate::zome_io::ExternOutput;
+use crate::validate::RequiredValidationType;
+use crate::zome_io::ExternIO;
 use crate::CallbackResult;
 use holochain_serialized_bytes::prelude::*;
 
@@ -74,6 +75,8 @@ pub struct EntryDef {
     pub crdt_type: CrdtType,
     /// how many validations to receive before considered "network saturated" (MAX value of 50?)
     pub required_validations: RequiredValidations,
+    /// The required validation package for this entry
+    pub required_validation_type: RequiredValidationType,
 }
 
 impl EntryDef {
@@ -82,13 +85,26 @@ impl EntryDef {
         visibility: EntryVisibility,
         crdt_type: CrdtType,
         required_validations: RequiredValidations,
+        required_validation_type: RequiredValidationType,
     ) -> Self {
         Self {
             id,
             visibility,
             crdt_type,
             required_validations,
+            required_validation_type,
         }
+    }
+
+    #[cfg(any(test, feature = "test_utils"))]
+    pub fn default_with_id<I: Into<EntryDefId>>(id: I) -> Self {
+        EntryDef::new(
+            id.into(),
+            Default::default(),
+            Default::default(),
+            Default::default(),
+            Default::default(),
+        )
     }
 }
 
@@ -136,9 +152,9 @@ impl From<Vec<EntryDef>> for EntryDefsCallbackResult {
     }
 }
 
-impl From<ExternOutput> for EntryDefsCallbackResult {
-    fn from(callback_guest_output: ExternOutput) -> Self {
-        match callback_guest_output.into_inner().try_into() {
+impl From<ExternIO> for EntryDefsCallbackResult {
+    fn from(callback_guest_output: ExternIO) -> Self {
+        match callback_guest_output.decode() {
             Ok(v) => v,
             Err(e) => Self::Err(format!("{:?}", e)),
         }
@@ -156,13 +172,12 @@ impl CallbackResult for EntryDefsCallbackResult {
 
 #[cfg(test)]
 mod tests {
-
     use super::EntryDef;
     use super::EntryDefsCallbackResult;
     use super::EntryVisibility;
     use crate::crdt::CrdtType;
-    use crate::zome_io::ExternOutput;
-    use std::convert::TryInto;
+    use crate::validate::RequiredValidationType;
+    use crate::zome_io::ExternIO;
 
     #[test]
     fn from_guest_output_test() {
@@ -172,10 +187,11 @@ mod tests {
                 visibility: EntryVisibility::Public,
                 crdt_type: CrdtType,
                 required_validations: 5.into(),
+                required_validation_type: RequiredValidationType::default(),
             }]
             .into(),
         );
-        let guest_output = ExternOutput::new(defs_callback_result.clone().try_into().unwrap());
+        let guest_output = ExternIO::encode(&defs_callback_result).unwrap();
         assert_eq!(defs_callback_result, guest_output.into(),);
     }
 }

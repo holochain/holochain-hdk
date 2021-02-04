@@ -1,3 +1,4 @@
+use crate::header::ZomeId;
 use crate::zome::ZomeName;
 use holo_hash::DnaHash;
 use holochain_serialized_bytes::prelude::*;
@@ -9,5 +10,7 @@ pub struct ZomeInfo {
     pub dna_name: String,
     pub dna_hash: DnaHash,
     pub zome_name: ZomeName,
-    pub properties: crate::SerializedBytes,
+    /// The position of this zome in the `dna.json`
+    pub zome_id: ZomeId,
+    pub properties: SerializedBytes,
 }

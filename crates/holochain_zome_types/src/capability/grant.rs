@@ -3,8 +3,10 @@ use crate::zome::FunctionName;
 use crate::zome::ZomeName;
 use holo_hash::*;
 use holochain_serialized_bytes::SerializedBytes;
-use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, HashSet};
+use serde::Deserialize;
+use serde::Serialize;
+use std::collections::BTreeMap;
+use std::collections::HashSet;
 
 /// Represents a _potentially_ valid access grant to a zome call.
 /// Zome call response will be Unauthorized without a valid grant.
@@ -89,7 +91,7 @@ impl CapGrant {
         &self,
         check_function: &GrantedFunction,
         check_agent: &AgentPubKey,
-        check_secret: &CapSecret,
+        check_secret: Option<&CapSecret>,
     ) -> bool {
         match self {
             // Grant is always valid if the author matches the check agent.
@@ -111,9 +113,9 @@ impl CapGrant {
                 && match access {
                     // Unless the extern is unrestricted.
                     CapAccess::Unrestricted => true,
-                    // Note the PartialEq implementation is constant time for secrets.
-                    CapAccess::Transferable { secret, .. } => secret == check_secret,
-                    CapAccess::Assigned { secret, .. } => secret == check_secret,
+                    // note the PartialEq implementation is constant time for secrets
+                    CapAccess::Transferable { secret, .. } => check_secret.map(|given| secret == given).unwrap_or(false),
+                    CapAccess::Assigned { secret, .. } => check_secret.map(|given| secret == given).unwrap_or(false),
                 }
             }
         }

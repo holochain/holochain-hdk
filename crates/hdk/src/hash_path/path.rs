@@ -4,6 +4,7 @@ use crate::prelude::*;
 use holochain_wasmer_guest::*;
 use holochain_zome_types::link::LinkTag;
 use std::str::FromStr;
+use validate::RequiredValidationType;
 
 /// Allows for "foo.bar.baz" to automatically move to/from ["foo", "bar", "baz"] components.
 /// Technically it's moving each string component in as bytes.
@@ -80,7 +81,7 @@ impl TryFrom<&Component> for String {
     type Error = SerializedBytesError;
     fn try_from(component: &Component) -> Result<Self, Self::Error> {
         if component.as_ref().len() % 4 != 0 {
-            return Err(SerializedBytesError::FromBytes(format!(
+            return Err(SerializedBytesError::Deserialize(format!(
                 "attempted to create u32s from utf8 bytes of length not a factor of 4: length {}",
                 component.as_ref().len()
             )));
@@ -106,7 +107,7 @@ impl TryFrom<&Component> for String {
                                     build = vec![];
                                 }
                                 None => {
-                                    error = Some(Err(SerializedBytesError::FromBytes(format!(
+                                    error = Some(Err(SerializedBytesError::Deserialize(format!(
                                         "unknown char for u32: {}",
                                         u
                                     ))));
@@ -143,6 +144,7 @@ entry_def!(Path EntryDef {
     crdt_type: CrdtType,
     required_validations: RequiredValidations::default(),
     visibility: EntryVisibility::Public,
+    required_validation_type: RequiredValidationType::default(),
 });
 
 /// Wrap components vector.
@@ -254,22 +256,22 @@ impl TryFrom<&LinkTag> for Path {
 
 impl Path {
     /// What is the hash for the current Path?
-    pub fn hash(&self) -> Result<holo_hash::EntryHash, HdkError> {
-        Ok(hash_entry!(self)?)
+    pub fn hash(&self) -> ExternResult<holo_hash::EntryHash> {
+        hash_entry(Entry::try_from(self)?)
     }
 
     /// Does an entry exist at the hash we expect?
-    pub fn exists(&self) -> Result<bool, HdkError> {
-        Ok(get!(self.hash()?)?.is_some())
+    pub fn exists(&self) -> ExternResult<bool> {
+        Ok(get(self.hash()?, GetOptions::content())?.is_some())
     }
 
     /// Recursively touch this and every parent that doesn't exist yet.
-    pub fn ensure(&self) -> Result<(), HdkError> {
+    pub fn ensure(&self) -> ExternResult<()> {
         if !self.exists()? {
-            create_entry!(self)?;
+            create_entry(self)?;
             if let Some(parent) = self.parent() {
                 parent.ensure()?;
-                create_link!(parent.hash()?, self.hash()?, LinkTag::try_from(self)?)?;
+                create_link(parent.hash()?, self.hash()?, LinkTag::try_from(self)?)?;
             }
         }
         Ok(())
@@ -286,22 +288,25 @@ impl Path {
 
     /// Touch and list all the links from this anchor to anchors below it.
     /// Only returns links between anchors, not to other entries that might have their own links.
-    pub fn children(&self) -> Result<holochain_zome_types::link::Links, HdkError> {
+    pub fn children(&self) -> ExternResult<holochain_zome_types::link::Links> {
         Self::ensure(&self)?;
-        let links = get_links!(self.hash()?, holochain_zome_types::link::LinkTag::new(NAME))?;
+        let links = get_links(
+            self.hash()?,
+            Some(holochain_zome_types::link::LinkTag::new(NAME)),
+        )?;
         // Only need one of each hash to build the tree.
         let mut unwrapped: Vec<holochain_zome_types::link::Link> = links.into_inner();
-        unwrapped.sort();
-        unwrapped.dedup();
+        unwrapped.sort_unstable_by(|a, b| a.tag.cmp(&b.tag));
+        unwrapped.dedup_by(|a, b| a.tag.eq(&b.tag));
         Ok(holochain_zome_types::link::Links::from(unwrapped))
     }
 
-    pub fn children_details(&self) -> Result<holochain_zome_types::link::LinkDetails, HdkError> {
+    pub fn children_details(&self) -> ExternResult<holochain_zome_types::link::LinkDetails> {
         Self::ensure(&self)?;
-        Ok(get_link_details!(
+        get_link_details(
             self.hash()?,
-            holochain_zome_types::link::LinkTag::new(NAME)
-        )?)
+            Some(holochain_zome_types::link::LinkTag::new(NAME)),
+        )
     }
 }
 
@@ -357,13 +362,13 @@ fn hash_path_component() {
 
     assert_eq!(
         String::try_from(&Component::from(vec![1])),
-        Err(SerializedBytesError::FromBytes(
+        Err(SerializedBytesError::Deserialize(
             "attempted to create u32s from utf8 bytes of length not a factor of 4: length 1".into()
         )),
     );
     assert_eq!(
         String::try_from(&Component::from(vec![9, 9, 9, 9])),
-        Err(SerializedBytesError::FromBytes(
+        Err(SerializedBytesError::Deserialize(
             "unknown char for u32: 151587081".into()
         )),
     );

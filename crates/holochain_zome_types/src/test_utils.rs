@@ -4,12 +4,13 @@
 
 use crate::capability::CapSecret;
 use crate::capability::CAP_SECRET_BYTES;
-use crate::ExternInput;
-use holo_hash::{hash_type, *};
+use crate::cell::CellId;
+use holo_hash::hash_type;
+use holo_hash::*;
 use holochain_serialized_bytes::prelude::*;
 
 fn fake_holo_hash<T: holo_hash::HashType>(name: u8, hash_type: T) -> HoloHash<T> {
-    HoloHash::from_raw_bytes_and_type([name; 36].to_vec(), hash_type)
+    HoloHash::from_raw_36_and_type([name; HOLO_HASH_UNTYPED_LEN].to_vec(), hash_type)
 }
 
 /// A fixture DnaHash for unit testing.
@@ -40,13 +41,13 @@ pub fn fake_agent_pub_key(name: u8) -> AgentPubKey {
 /// A fixture AgentPubKey for unit testing.
 /// NB: This must match up with AgentPubKeyFixturator's Predictable curve
 pub fn fake_agent_pubkey_1() -> AgentPubKey {
-    AgentPubKey::try_from("uhCAkw-zrttiYpdfAYX4fR6W8DPUdheZJ-1QsRA4cTImmzTYUcOr4").unwrap()
+    AgentPubKey::try_from("uhCAkmrkoAHPVf_eufG7eC5fm6QKrW5pPMoktvG5LOC0SnJ4vV1Uv").unwrap()
 }
 
 /// Another fixture AgentPubKey for unit testing.
 /// NB: This must match up with AgentPubKeyFixturator's Predictable curve
 pub fn fake_agent_pubkey_2() -> AgentPubKey {
-    AgentPubKey::try_from("uhCAkomHzekU0-x7p62WmrusdxD2w9wcjdajC88688JGSTEo6cbEK").unwrap()
+    AgentPubKey::try_from("uhCAke1j8Z2a-_min0h0pGuEMcYlo_V1l1mt9OtBuywKmHlg4L_R-").unwrap()
 }
 
 /// A fixture CapSecret for unit testing.
@@ -54,7 +55,7 @@ pub fn fake_cap_secret() -> CapSecret {
     [0; CAP_SECRET_BYTES].into()
 }
 
-/// A fixture ZomeCallInvocationPayload for unit testing.
-pub fn fake_zome_invocation_payload() -> ExternInput {
-    ExternInput::try_from(SerializedBytes::try_from(()).unwrap()).unwrap()
+/// A fixture example CellId for unit testing.
+pub fn fake_cell_id(name: u8) -> CellId {
+    (fake_dna_hash(name), fake_agent_pubkey_1()).into()
 }

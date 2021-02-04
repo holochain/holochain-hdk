@@ -1,9 +1,8 @@
 //! Metadata types for use in wasm
-use crate::{
-    element::Element,
-    header::{Delete, Update},
-    Entry, Header,
-};
+use crate::element::Element;
+use crate::element::SignedHeaderHashed;
+use crate::validate::ValidationStatus;
+use crate::Entry;
 use holochain_serialized_bytes::prelude::*;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, SerializedBytes)]
@@ -25,8 +24,12 @@ pub struct ElementDetails {
     /// The specific element.
     /// Either a Create or an Update.
     pub element: Element,
-    /// Any Delete on this element.
-    pub deletes: Vec<Delete>,
+    /// The validation status of this element.
+    pub validation_status: ValidationStatus,
+    /// Any [Delete] on this element.
+    pub deletes: Vec<SignedHeaderHashed>,
+    /// Any [Update] on this element.
+    pub updates: Vec<SignedHeaderHashed>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, SerializedBytes)]
@@ -34,16 +37,33 @@ pub struct ElementDetails {
 pub struct EntryDetails {
     /// The data
     pub entry: Entry,
-    /// Create relationships.
-    /// These can only be Create or Update headers
-    pub headers: Vec<Header>,
-    /// Delete relationships
-    pub deletes: Vec<Delete>,
-    /// Update relationships.
-    /// ## Warning
+    /// ## Create relationships.
+    /// These are the headers that created this entry.
+    /// They can be either a [Create] or an [Update] header
+    /// where the `entry_hash` field is the hash of
+    /// the above entry.
+    ///
+    /// You can make an [Element] from any of these
+    /// and the entry.
+    pub headers: Vec<SignedHeaderHashed>,
+    /// Rejected create relationships.
+    /// These are also the headers that created this entry.
+    /// but did not pass validation.
+    pub rejected_headers: Vec<SignedHeaderHashed>,
+    /// ## Delete relationships
+    /// These are the deletes that have the
+    /// `deletes_entry_address` set to the above Entry.
+    pub deletes: Vec<SignedHeaderHashed>,
+    /// ## Update relationships.
+    /// These are the updates that have the
+    /// `original_entry_address` set to the above Entry.
+    /// ### Notes
     /// This is just the relationship and you will need call get
-    /// if you want to get the new Entry.
-    pub updates: Vec<Update>,
+    /// if you want to get the new Entry (the entry on the `entry_hash` field).
+    ///
+    /// You **cannot** make an [Element] from these headers
+    /// and the above entry.
+    pub updates: Vec<SignedHeaderHashed>,
     /// The status of this entry currently
     /// according to your view of the metadata
     pub entry_dht_status: EntryDhtStatus,

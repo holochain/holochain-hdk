@@ -1,6 +1,10 @@
 //! Types for source chain queries
 
-use crate::header::{EntryType, Header, HeaderType};
+use crate::header::EntryType;
+use crate::header::Header;
+use crate::header::HeaderType;
+use crate::warrant::Warrant;
+use holo_hash::HeaderHash;
 pub use holochain_serialized_bytes::prelude::*;
 
 /// Query arguments
@@ -17,12 +21,99 @@ pub struct ChainQueryFilter {
     pub entry_type: Option<EntryType>,
     /// Filter by HeaderType
     pub header_type: Option<HeaderType>,
+    /// Include the entries in the elements
+    pub include_entries: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, SerializedBytes)]
+/// An agents chain elements returned from a agent_activity_query
+pub struct AgentActivity {
+    /// Valid headers on this chain.
+    pub valid_activity: Vec<(u32, HeaderHash)>,
+    /// Rejected headers on this chain.
+    pub rejected_activity: Vec<(u32, HeaderHash)>,
+    /// The status of this chain.
+    pub status: ChainStatus,
+    /// The highest chain header that has
+    /// been observed by this authority.
+    pub highest_observed: Option<HighestObserved>,
+    /// Warrants about this AgentActivity.
+    /// Placeholder for future.
+    pub warrants: Vec<Warrant>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize, SerializedBytes)]
+/// Get either the full activity or just the status of the chain
+pub enum ActivityRequest {
+    /// Just request the status of the chain
+    Status,
+    /// Request all the activity
+    Full,
+}
+
+#[derive(Clone, Debug, PartialEq, Hash, Eq, serde::Serialize, serde::Deserialize)]
+/// The highest header sequence observed by this authority.
+/// This also includes the headers at this sequence.
+/// If there is more then one then there is a fork.
+///
+/// This type is to prevent headers being hidden by
+/// withholding the previous header.
+///
+/// The information is tracked at the edge of holochain before
+/// validation (but after drop checks).
+pub struct HighestObserved {
+    /// The highest sequence number observed.
+    pub header_seq: u32,
+    /// Hashes of any headers claiming to be at this
+    /// header sequence.
+    pub hash: Vec<HeaderHash>,
+}
+
+#[derive(Clone, Debug, Hash, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+/// Status of the agent activity chain
+// TODO: In the future we will most likely be replaced
+// by warrants instead of Forked / Invalid so we can provide
+// evidence of why the chain has a status.
+pub enum ChainStatus {
+    /// This authority has no information on the chain.
+    Empty,
+    /// The chain is valid as at this header sequence and header hash.
+    Valid(ChainHead),
+    /// Chain is forked.
+    Forked(ChainFork),
+    /// Chain is invalid because of this header.
+    Invalid(ChainHead),
+}
+
+#[derive(Clone, Debug, Hash, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+/// The header at the head of the complete chain.
+/// This is as far as this authority can see a
+/// chain with no gaps.
+pub struct ChainHead {
+    /// Sequence number of this chain head.
+    pub header_seq: u32,
+    /// Hash of this chain head
+    pub hash: HeaderHash,
+}
+
+#[derive(Clone, Debug, Hash, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+/// The chain has been forked by these two headers
+pub struct ChainFork {
+    /// The point where the chain has forked.
+    pub fork_seq: u32,
+    /// The first header at this sequence position.
+    pub first_header: HeaderHash,
+    /// The second header at this sequence position.
+    pub second_header: HeaderHash,
 }
 
 impl ChainQueryFilter {
     /// Create a no-op ChainQueryFilter which returns everything
     pub fn new() -> Self {
-        Self::default()
+        Self {
+            include_entries: false,
+            ..Self::default()
+        }
     }
 
     /// Filter on sequence range
@@ -40,6 +131,12 @@ impl ChainQueryFilter {
     /// Filter on header type
     pub fn header_type(mut self, header_type: HeaderType) -> Self {
         self.header_type = Some(header_type);
+        self
+    }
+
+    /// Include the entries in the ElementsVec that is returned
+    pub fn include_entries(mut self, include_entries: bool) -> Self {
+        self.include_entries = include_entries;
         self
     }
 
@@ -62,7 +159,7 @@ impl ChainQueryFilter {
                 header
                     .entry_type()
                     .map(|header_entry_type| *header_entry_type == *entry_type)
-                    .unwrap_or(true)
+                    .unwrap_or(false)
             })
             .unwrap_or(true);
         check_range && check_header_type && check_entry_type
@@ -73,8 +170,9 @@ impl ChainQueryFilter {
 #[cfg(feature = "fixturators")]
 mod tests {
     use crate::fixt::AppEntryTypeFixturator;
+    use crate::fixt::*;
     use crate::header::EntryType;
-    use crate::{fixt::*, Header};
+    use crate::Header;
     use ::fixt::prelude::*;
 
     use super::ChainQueryFilter;
@@ -133,11 +231,11 @@ mod tests {
 
         assert_eq!(
             map_query(&query_1, &headers),
-            [true, false, true, false, true, true].to_vec()
+            [true, false, false, false, true, false].to_vec()
         );
         assert_eq!(
             map_query(&query_2, &headers),
-            [false, true, true, true, false, true].to_vec()
+            [false, true, false, true, false, false].to_vec()
         );
     }
 
@@ -223,7 +321,7 @@ mod tests {
                     .sequence_range(0..1000),
                 &headers
             ),
-            [true, false, true, false, true, true].to_vec()
+            [true, false, false, false, true, false].to_vec()
         );
     }
 }

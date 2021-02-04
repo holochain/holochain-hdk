@@ -49,14 +49,14 @@ impl TryFrom<&Path> for Anchor {
                     },
                 })
             } else {
-                Err(SerializedBytesError::FromBytes(format!(
+                Err(SerializedBytesError::Deserialize(format!(
                     "Bad anchor path root {:0?} should be {:1?}",
                     components[0].as_ref(),
                     ROOT.as_bytes(),
                 )))
             }
         } else {
-            Err(SerializedBytesError::FromBytes(format!(
+            Err(SerializedBytesError::Deserialize(format!(
                 "Bad anchor path length {}",
                 components.len()
             )))
@@ -66,32 +66,34 @@ impl TryFrom<&Path> for Anchor {
 
 /// Simple string interface to simple string based paths.
 /// a.k.a "the anchor pattern" that predates paths by a few years.
-pub fn anchor(anchor_type: String, anchor_text: String) -> Result<holo_hash::EntryHash, HdkError> {
+pub fn anchor(anchor_type: String, anchor_text: String) -> ExternResult<holo_hash::EntryHash> {
     let path: Path = (&Anchor {
         anchor_type,
         anchor_text: Some(anchor_text),
     })
         .into();
     path.ensure()?;
-    Ok(path.hash()?)
+    path.hash()
 }
 
 /// Attempt to get an anchor by its hash.
 /// Returns None if the hash doesn't point to an anchor.
 /// We can't do anything fancy like ensure the anchor if not exists because we only have a hash.
-pub fn get_anchor(anchor_address: holo_hash::EntryHash) -> Result<Option<Anchor>, HdkError> {
-    Ok(match get!(anchor_address)?.and_then(|el| el.into()) {
-        Some(Entry::App(eb)) => {
-            let path = Path::try_from(SerializedBytes::from(eb))?;
-            Some(Anchor::try_from(&path)?)
-        }
-        _ => None,
-    })
+pub fn get_anchor(anchor_address: EntryHash) -> ExternResult<Option<Anchor>> {
+    Ok(
+        match crate::prelude::get(anchor_address, GetOptions::content())?.and_then(|el| el.into()) {
+            Some(Entry::App(eb)) => {
+                let path = Path::try_from(SerializedBytes::from(eb))?;
+                Some(Anchor::try_from(&path)?)
+            }
+            _ => None,
+        },
+    )
 }
 
 /// Returns every entry hash in a vector from the root of an anchor.
 /// Hashes are sorted in the same way that paths sort children.
-pub fn list_anchor_type_addresses() -> Result<Vec<holo_hash::EntryHash>, HdkError> {
+pub fn list_anchor_type_addresses() -> ExternResult<Vec<EntryHash>> {
     let links = Path::from(ROOT)
         .children()?
         .into_inner()
@@ -104,7 +106,7 @@ pub fn list_anchor_type_addresses() -> Result<Vec<holo_hash::EntryHash>, HdkErro
 /// Returns every entry hash in a vector from the second level of an anchor.
 /// Uses the string argument to build the path from the root.
 /// Hashes are sorted in the same way that paths sort children.
-pub fn list_anchor_addresses(anchor_type: String) -> Result<Vec<holo_hash::EntryHash>, HdkError> {
+pub fn list_anchor_addresses(anchor_type: String) -> ExternResult<Vec<EntryHash>> {
     let path: Path = (&Anchor {
         anchor_type,
         anchor_text: None,
@@ -124,7 +126,7 @@ pub fn list_anchor_addresses(anchor_type: String) -> Result<Vec<holo_hash::Entry
 /// tags are a single array of bytes, so to get an external interface that is somewhat backwards
 /// compatible we need to rebuild the anchors from the paths serialized into the links and then
 /// return them.
-pub fn list_anchor_tags(anchor_type: String) -> Result<Vec<String>, HdkError> {
+pub fn list_anchor_tags(anchor_type: String) -> ExternResult<Vec<String>> {
     let path: Path = (&Anchor {
         anchor_type,
         anchor_text: None,
@@ -139,7 +141,7 @@ pub fn list_anchor_tags(anchor_type: String) -> Result<Vec<String>, HdkError> {
             Ok(path) => match Anchor::try_from(&path) {
                 Ok(anchor) => match anchor.anchor_text {
                     Some(text) => Ok(text),
-                    None => Err(SerializedBytesError::FromBytes(
+                    None => Err(SerializedBytesError::Deserialize(
                         "missing anchor text".into(),
                     )),
                 },

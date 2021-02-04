@@ -8,7 +8,10 @@
 use crate::capability::CapClaim;
 use crate::capability::CapGrant;
 use crate::capability::ZomeCallCapGrant;
-use holo_hash::{hash_type, AgentPubKey, HashableContent, HashableContentBytes};
+use holo_hash::hash_type;
+use holo_hash::AgentPubKey;
+use holo_hash::HashableContent;
+use holo_hash::HashableContentBytes;
 use holochain_serialized_bytes::prelude::*;
 
 mod app_entry_bytes;
@@ -30,8 +33,63 @@ pub type CapGrantEntry = ZomeCallCapGrant;
 pub type CapClaimEntry = CapClaim;
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
-/// @todo make some options for get
-pub struct GetOptions;
+/// Options for controlling how get works
+pub struct GetOptions {
+    /// If this is true the get call will wait for
+    /// the latest data before returning.
+    /// If it is false you will get whatever is locally
+    /// available on this conductor.
+    pub strategy: GetStrategy,
+}
+
+impl GetOptions {
+    /// This will get you the content
+    /// with latest metadata if it can
+    /// otherwise it will fallback to what
+    /// you have cached locally.
+    ///
+    /// This call is guaranteed to not go to
+    /// the network if you are an authority
+    /// for this hash.
+    pub fn latest() -> Self {
+        Self {
+            strategy: GetStrategy::Latest,
+        }
+    }
+    /// Gets the content but does not
+    /// try to get the latest metadata.
+    /// This will save a network call if the
+    /// entry is local (cached, authored or integrated).
+    ///
+    /// This will fallback to the network if the content
+    /// is not found locally
+    pub fn content() -> Self {
+        Self {
+            strategy: GetStrategy::Content,
+        }
+    }
+}
+
+impl Default for GetOptions {
+    fn default() -> Self {
+        Self::latest()
+    }
+}
+
+#[derive(PartialEq, Debug, Clone, Copy, Serialize, Deserialize)]
+/// Describes the get call and what information
+/// the caller is concerned about.
+/// This helps the subconscious avoid unnecessary network calls.
+pub enum GetStrategy {
+    /// Will try to get the latest metadata but fallback
+    /// to the cache if none is found.
+    /// Does not go to the network if you are an authority for the data.
+    Latest,
+    /// Will try to get the content locally but go
+    /// to the network if it is not found.
+    /// Does not go to the network if you are an authority for the data.
+    Content,
+}
 
 /// Structure holding the entry portion of a chain element.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, SerializedBytes)]
@@ -94,13 +152,90 @@ impl HashableContent for Entry {
     fn hashable_content(&self) -> HashableContentBytes {
         match self {
             Entry::Agent(agent_pubkey) => {
-                HashableContentBytes::Prehashed36(agent_pubkey.clone().into_inner())
+                // We must retype this AgentPubKey as an EntryHash so that the
+                // prefix bytes match the Entry prefix
+                HashableContentBytes::Prehashed39(
+                    agent_pubkey
+                        .clone()
+                        .retype(holo_hash::hash_type::Entry)
+                        .into_inner(),
+                )
             }
             entry => HashableContentBytes::Content(
                 entry
                     .try_into()
                     .expect("Could not serialize HashableContent"),
             ),
+        }
+    }
+}
+
+/// Data to create an entry.
+#[derive(PartialEq, Clone, Debug, serde::Serialize, serde::Deserialize, SerializedBytes)]
+pub struct EntryWithDefId {
+    entry_def_id: crate::entry_def::EntryDefId,
+    entry: crate::entry::Entry,
+}
+
+impl EntryWithDefId {
+    /// Constructor.
+    pub fn new(entry_def_id: crate::entry_def::EntryDefId, entry: crate::entry::Entry) -> Self {
+        Self {
+            entry_def_id,
+            entry,
+        }
+    }
+}
+
+impl AsRef<crate::Entry> for EntryWithDefId {
+    fn as_ref(&self) -> &crate::Entry {
+        &self.entry
+    }
+}
+
+impl AsRef<crate::EntryDefId> for EntryWithDefId {
+    fn as_ref(&self) -> &crate::EntryDefId {
+        &self.entry_def_id
+    }
+}
+
+/// Zome IO inner for get and get_details calls.
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct GetInput {
+    /// Any DHT hash to pass to get or get_details.
+    pub any_dht_hash: holo_hash::AnyDhtHash,
+    /// Options for the call.
+    pub get_options: crate::entry::GetOptions,
+}
+
+impl GetInput {
+    /// Constructor.
+    pub fn new(any_dht_hash: holo_hash::AnyDhtHash, get_options: crate::entry::GetOptions) -> Self {
+        Self {
+            any_dht_hash,
+            get_options,
+        }
+    }
+}
+
+/// Zome IO inner for update.
+#[derive(PartialEq, Debug, Deserialize, Serialize, Clone)]
+pub struct UpdateInput {
+    /// Header of the element being updated.
+    pub original_header_address: holo_hash::HeaderHash,
+    /// Value of the update.
+    pub entry_with_def_id: EntryWithDefId,
+}
+
+impl UpdateInput {
+    /// Constructor.
+    pub fn new(
+        original_header_address: holo_hash::HeaderHash,
+        entry_with_def_id: EntryWithDefId,
+    ) -> Self {
+        Self {
+            original_header_address,
+            entry_with_def_id,
         }
     }
 }

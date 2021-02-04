@@ -1,3 +1,5 @@
+use crate::prelude::*;
+
 /// Hides away the gross bit where we hook up integer pointers to length-prefixed guest memory
 /// to serialization and deserialization, and returning things to the host, and memory allocation
 /// and deallocation.
@@ -21,22 +23,47 @@
 /// ```
 #[macro_export]
 macro_rules! map_extern {
-    ( $name:tt, $f:ident ) => {
-        #[no_mangle]
-        pub extern "C" fn $name(ptr: $crate::prelude::GuestPtr) -> $crate::prelude::GuestPtr {
-            let input: $crate::prelude::ExternInput = $crate::prelude::host_args!(ptr);
-            let result = $f($crate::prelude::try_result!(
-                input.into_inner().try_into(),
-                "failed to deserialize args"
-            ));
-            let result_value = $crate::prelude::try_result!(result, "inner function failed");
-            let result_sb = $crate::prelude::try_result!(
-                $crate::prelude::SerializedBytes::try_from(result_value),
-                "inner function result serialization error"
-            );
-            $crate::prelude::ret!($crate::prelude::ExternOutput::new(result_sb));
+    ( $name:tt, $f:ident, $input:ty, $output:ty ) => {
+        $crate::paste::paste! {
+            mod [< __ $name _extern >] {
+                use super::*;
+
+                #[no_mangle]
+                pub extern "C" fn $name(guest_ptr: $crate::prelude::GuestPtr) -> $crate::prelude::GuestPtr {
+                    // Setup tracing.
+                    // @TODO feature flag this?
+                    match $crate::prelude::tracing::subscriber::set_global_default(
+                        $crate::host_fn::trace::WasmSubscriber::default()
+                    ) {
+                        Ok(_) => {},
+                        Err(e) => return $crate::prelude::return_err_ptr($crate::prelude::WasmError::Zome(e.to_string())),
+                    }
+
+                    // Deserialize the input from the host.
+                    let extern_io: $crate::prelude::ExternIO = match $crate::prelude::host_args(guest_ptr) {
+                        Ok(v) => v,
+                        Err(err_ptr) => return err_ptr,
+                    };
+                    let inner: $input = match extern_io.decode() {
+                        Ok(v) => v,
+                        Err(_) => return $crate::prelude::return_err_ptr($crate::prelude::WasmError::Deserialize(vec![0])),
+                    };
+
+                    // Call the function.
+                    let output: $output = match super::$f(inner) {
+                        Ok(v) => Ok(v),
+                        Err(wasm_error) => return $crate::prelude::return_err_ptr(wasm_error),
+                    };
+
+                    // Serialize the output for the host.
+                    match $crate::prelude::ExternIO::encode(output.unwrap()) {
+                        Ok(v) => $crate::prelude::return_ptr::<$crate::prelude::ExternIO>(v),
+                        Err(serialized_bytes_error) => $crate::prelude::return_err_ptr($crate::prelude::WasmError::Serialize(serialized_bytes_error)),
+                    }
+                }
+            }
         }
     };
 }
 
-pub type ExternResult<T> = Result<T, crate::prelude::HdkError>;
+pub type ExternResult<T> = Result<T, WasmError>;

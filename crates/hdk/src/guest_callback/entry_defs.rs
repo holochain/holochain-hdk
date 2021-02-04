@@ -5,7 +5,7 @@
 ///
 /// For example, the Foo::entry_def() style works best in the entry_defs callback as it doesn't
 /// require an instantiated Foo in order to get the definition.
-/// On the other hand, EntryDef::from(Foo::new()) works better when e.g. using create_entry!() as
+/// On the other hand, EntryDef::from(Foo::new()) works better when e.g. using create_entry() as
 /// an instance of Foo already exists and we need the entry def id back for creates and updates.
 ///
 /// If you don't want to use the macro you can simply implement similar fns youself.
@@ -14,7 +14,7 @@
 /// impls are just a loose set of conventions.
 ///
 /// It's actually entirely possible to interact with core directly without any of these.
-/// e.g. create_entry!() is just building a tuple of EntryDefId and Entry::App under the hood.
+/// e.g. create_entry() is just building a tuple of EntryDefId and Entry::App under the hood.
 ///
 /// This requires that TryFrom and TryInto SerializedBytes is implemented for the entry type,
 /// which implies that serde::Serialize and serde::Deserialize is also implemented.
@@ -62,13 +62,13 @@ macro_rules! entry_def {
         }
 
         impl TryFrom<&$crate::prelude::Entry> for $t {
-            type Error = $crate::prelude::HdkError;
+            type Error = $crate::prelude::WasmError;
             fn try_from(entry: &$crate::prelude::Entry) -> Result<Self, Self::Error> {
                 match entry {
-                    Entry::App(eb) => Ok(Self::try_from($crate::prelude::SerializedBytes::from(
-                        eb.to_owned(),
-                    ))?),
-                    _ => Err($crate::prelude::SerializedBytesError::FromBytes(format!(
+                    $crate::prelude::Entry::App(eb) => Ok(Self::try_from(
+                        $crate::prelude::SerializedBytes::from(eb.to_owned()),
+                    )?),
+                    _ => Err($crate::prelude::SerializedBytesError::Deserialize(format!(
                         "{:?} is not an Entry::App so has no serialized bytes",
                         entry
                     ))
@@ -78,9 +78,33 @@ macro_rules! entry_def {
         }
 
         impl TryFrom<$crate::prelude::Entry> for $t {
-            type Error = $crate::prelude::HdkError;
+            type Error = $crate::prelude::WasmError;
             fn try_from(entry: $crate::prelude::Entry) -> Result<Self, Self::Error> {
                 Self::try_from(&entry)
+            }
+        }
+
+        impl TryFrom<&$t> for $crate::prelude::Entry {
+            type Error = $crate::prelude::WasmError;
+            fn try_from(t: &$t) -> Result<Self, Self::Error> {
+                match AppEntryBytes::try_from(SerializedBytes::try_from(t)?) {
+                    Ok(app_entry_bytes) => Ok(Self::App(app_entry_bytes)),
+                    Err(entry_error) => match entry_error {
+                        EntryError::SerializedBytes(serialized_bytes_error) => {
+                            Err(WasmError::Serialize(serialized_bytes_error))
+                        }
+                        EntryError::EntryTooLarge(_) => {
+                            Err(WasmError::Zome(entry_error.to_string()))
+                        }
+                    },
+                }
+            }
+        }
+
+        impl TryFrom<$t> for $crate::prelude::Entry {
+            type Error = $crate::prelude::WasmError;
+            fn try_from(t: $t) -> Result<Self, Self::Error> {
+                Self::try_from(&t)
             }
         }
 
@@ -105,6 +129,20 @@ macro_rules! entry_def {
         impl From<&$t> for $crate::prelude::EntryDefId {
             fn from(_: &$t) -> Self {
                 $t::entry_def_id()
+            }
+        }
+
+        impl TryFrom<&$t> for $crate::prelude::EntryWithDefId {
+            type Error = $crate::prelude::WasmError;
+            fn try_from(t: &$t) -> Result<Self, Self::Error> {
+                Ok(Self::new($t::entry_def_id(), t.try_into()?))
+            }
+        }
+
+        impl TryFrom<$t> for $crate::prelude::EntryWithDefId {
+            type Error = $crate::prelude::WasmError;
+            fn try_from(t: $t) -> Result<Self, Self::Error> {
+                (&t).try_into()
             }
         }
 

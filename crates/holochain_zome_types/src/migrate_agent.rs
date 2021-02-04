@@ -1,22 +1,22 @@
-use crate::zome_io::ExternOutput;
+use crate::zome_io::ExternIO;
 use crate::CallbackResult;
 use holochain_serialized_bytes::prelude::*;
 
-#[derive(Clone, Serialize, Deserialize, SerializedBytes)]
+#[derive(Clone, Serialize, Deserialize, SerializedBytes, Debug)]
 pub enum MigrateAgent {
     Open,
     Close,
 }
 
-#[derive(Clone, PartialEq, Serialize, Deserialize, SerializedBytes)]
+#[derive(Clone, PartialEq, Serialize, Deserialize, SerializedBytes, Debug)]
 pub enum MigrateAgentCallbackResult {
     Pass,
     Fail(String),
 }
 
-impl From<ExternOutput> for MigrateAgentCallbackResult {
-    fn from(guest_output: ExternOutput) -> Self {
-        match guest_output.into_inner().try_into() {
+impl From<ExternIO> for MigrateAgentCallbackResult {
+    fn from(guest_output: ExternIO) -> Self {
+        match guest_output.decode() {
             Ok(v) => v,
             Err(e) => Self::Fail(format!("{:?}", e)),
         }
@@ -25,9 +25,6 @@ impl From<ExternOutput> for MigrateAgentCallbackResult {
 
 impl CallbackResult for MigrateAgentCallbackResult {
     fn is_definitive(&self) -> bool {
-        match self {
-            MigrateAgentCallbackResult::Fail(_) => true,
-            _ => false,
-        }
+        matches!(self, MigrateAgentCallbackResult::Fail(_))
     }
 }
