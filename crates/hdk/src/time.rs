@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-/// Trivial wrapper to return the current system time from the host.
+/// Current system time from the host.
 ///
 /// System time doesn't accept any arguments so usage is as simple as:
 ///
@@ -48,13 +48,13 @@ use crate::prelude::*;
 /// time, which might rely on agents providing snapshots of links to public keys (i.e. representing
 /// the roughtime ecosystem itself in a happ).
 ///
-/// @see https://blog.cloudflare.com/roughtime/
+/// See https://blog.cloudflare.com/roughtime/
 ///
 /// @todo
 /// Another option is to use proof of work style constructions to roughly throttle the speed that
 /// things can be done without relying on absolute times, or even that users experience the same
 /// throttling due to differences in CPU/GPU performance on the POW algorithm.
-/// @see https://zkga.me/ uses this as a game mechanic
+/// See https://zkga.me/ uses this as a game mechanic
 ///
 /// @todo
 /// Other p2p type time syncing algorithms that allow peers to adjust their clock offsets to agree
@@ -63,4 +63,14 @@ use crate::prelude::*;
 /// flaky networking, etc.
 pub fn sys_time() -> ExternResult<core::time::Duration> {
     host_call::<(), core::time::Duration>(__sys_time, ())
+}
+
+/// @todo Not implemented
+pub fn schedule(execute_after: std::time::Duration) -> ExternResult<()> {
+    host_call::<std::time::Duration, ()>(__schedule, execute_after)
+}
+
+/// @todo Not implemented
+pub fn sleep(wake_after: std::time::Duration) -> ExternResult<()> {
+    host_call::<std::time::Duration, ()>(__sleep, wake_after)
 }

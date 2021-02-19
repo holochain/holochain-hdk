@@ -3,11 +3,24 @@ use crate::hash_path::path::Path;
 use crate::prelude::*;
 use holochain_wasmer_guest::*;
 
-/// "hdk3anchor"
-pub const ROOT: &str = "hdk3anchor";
+/// This is the root of the [ `Path` ] tree.
+///
+/// Forms the entry point to all anchors so that agents can navigate down the tree from here.
+///
+/// The string "hdkanchor".
+pub const ROOT: &str = "hdkanchor";
 
 #[derive(PartialEq, SerializedBytes, serde::Serialize, serde::Deserialize, Debug, Clone)]
-/// Historically an anchor could only be 1 or 2 levels deep as "type" and "text".
+/// An anchor can only be 1 or 2 levels deep as "type" and "text".
+///
+/// The second level is optional and the Strings use the standard [ `TryInto` ] for path [ `Component` ] internally.
+///
+/// __Anchors are required to be included in an application's [ `entry_defs` ]__ callback and so implement all the standard methods.
+/// Technically the [ `Anchor` ] entry definition is the [ `Path` ] definition.
+///
+/// e.g. `entry_defs![Anchor::entry_def()]`
+///
+/// The methods implemented on anchor follow the patterns that predate the Path module but `Path::from(&anchor)` is always possible to use the newer APIs.
 pub struct Anchor {
     pub anchor_type: String,
     pub anchor_text: Option<String>,
@@ -159,15 +172,15 @@ pub fn list_anchor_tags(anchor_type: String) -> ExternResult<Vec<String>> {
 #[cfg(test)]
 #[test]
 fn hash_path_root() {
-    assert_eq!(ROOT, "hdk3anchor");
+    assert_eq!(ROOT, "hdkanchor");
 }
 
 #[cfg(test)]
 #[test]
 fn hash_path_anchor_path() {
     for (atype, text, path_string) in vec![
-        ("foo", None, "hdk3anchor.foo"),
-        ("foo", Some("bar".to_string()), "hdk3anchor.foo.bar"),
+        ("foo", None, "hdkanchor.foo"),
+        ("foo", Some("bar".to_string()), "hdkanchor.foo.bar"),
     ] {
         assert_eq!(
             Path::from(path_string),
@@ -199,8 +212,8 @@ fn hash_path_anchor_entry_def() {
 fn hash_path_anchor_from_path() {
     let path = Path::from(vec![
         Component::from(vec![
-            104, 0, 0, 0, 100, 0, 0, 0, 107, 0, 0, 0, 51, 0, 0, 0, 97, 0, 0, 0, 110, 0, 0, 0, 99,
-            0, 0, 0, 104, 0, 0, 0, 111, 0, 0, 0, 114, 0, 0, 0,
+            104, 0, 0, 0, 100, 0, 0, 0, 107, 0, 0, 0, 97, 0, 0, 0, 110, 0, 0, 0, 99, 0, 0, 0, 104,
+            0, 0, 0, 111, 0, 0, 0, 114, 0, 0, 0,
         ]),
         Component::from(vec![102, 0, 0, 0, 111, 0, 0, 0, 111, 0, 0, 0]),
         Component::from(vec![98, 0, 0, 0, 97, 0, 0, 0, 114, 0, 0, 0]),
