@@ -23,7 +23,7 @@ use crate::prelude::*;
 /// statistics it is usually recommended to generate or provide a seed and then use an appropriate
 /// PRNG from there.
 ///
-/// @see the rand rust crate
+/// See the rand rust crate
 pub fn random_bytes(number_of_bytes: u32) -> ExternResult<Bytes> {
     host_call::<u32, Bytes>(__random_bytes, number_of_bytes)
 }
@@ -58,6 +58,7 @@ impl_try_from_random!(
     CapSecret,
     holochain_zome_types::capability::CAP_SECRET_BYTES
 );
+
 // @todo don't generate these in wasm.
 // What we really want to be doing is have secrets generated in lair and then lair passes back an
 // opaque reference to the secret.

@@ -7,7 +7,7 @@ use crate::prelude::*;
 /// A lot of that is handled by the holochain_wasmer crates but this handles the boilerplate of
 /// writing an extern function as they have awkward input and output signatures:
 ///
-/// - requires remembering #[no_mangle]
+/// - requires remembering `#[no_mangle]`
 /// - requires remembering pub extern "C"
 /// - requires juggling GuestPtr on the input and output with the memory/serialization
 /// - doesn't support Result returns at all, so breaks things as simple as `?`
@@ -33,10 +33,10 @@ macro_rules! map_extern {
                     // Setup tracing.
                     // @TODO feature flag this?
                     match $crate::prelude::tracing::subscriber::set_global_default(
-                        $crate::host_fn::trace::WasmSubscriber::default()
+                        $crate::trace::WasmSubscriber::default()
                     ) {
                         Ok(_) => {},
-                        Err(e) => return $crate::prelude::return_err_ptr($crate::prelude::WasmError::Zome(e.to_string())),
+                        Err(e) => return $crate::prelude::return_err_ptr($crate::prelude::WasmError::Guest(e.to_string())),
                     }
 
                     // Deserialize the input from the host.
@@ -46,7 +46,11 @@ macro_rules! map_extern {
                     };
                     let inner: $input = match extern_io.decode() {
                         Ok(v) => v,
-                        Err(_) => return $crate::prelude::return_err_ptr($crate::prelude::WasmError::Deserialize(vec![0])),
+                        Err(e) => {
+                            let bytes = extern_io.0;
+                            $crate::prelude::error!(output_type = std::any::type_name::<$output>(), bytes = ?bytes, "{}", e);
+                            return $crate::prelude::return_err_ptr($crate::prelude::WasmError::Deserialize(bytes));
+                        }
                     };
 
                     // Call the function.
@@ -66,4 +70,5 @@ macro_rules! map_extern {
     };
 }
 
+/// Every extern _must_ retern a `WasmError` in the case of failure.
 pub type ExternResult<T> = Result<T, WasmError>;
