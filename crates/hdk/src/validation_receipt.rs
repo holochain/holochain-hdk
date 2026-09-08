@@ -17,26 +17,9 @@ use holochain_zome_types::prelude::{GetValidationReceiptsInput, ValidationReceip
 /// ```rust,no_run
 /// use hdk::prelude::*;
 ///
-/// #[derive(Serialize, Deserialize)]
-/// #[serde(tag = "type")]
-/// #[hdk_entry_types]
-/// #[unit_enum(UnitEntryTypes)]
-/// pub enum EntryTypes {
-///     MyType(MyType),
-/// }
-///
-/// #[hdk_entry_helper]
-/// pub struct MyType {
-///     value: String,
-/// }
-///
-/// #[hdk_extern]
-/// fn create_and_list() -> ExternResult<()> {
-///     let action_hash = create_entry(EntryTypes::MyType(MyType {
-///         value: "foo".into(),
-///     }))?;
-///
-///     // Later on
+/// # fn main() -> ExternResult<()> {
+///     // Use the action hash returned when the entry was created.
+///     let action_hash = ActionHash::from_raw_36(vec![0; 36]);
 ///     let receipts = get_validation_receipts(GetValidationReceiptsInput::new(action_hash))?;
 ///     let count = receipts
 ///         .into_iter()
@@ -44,8 +27,8 @@ use holochain_zome_types::prelude::{GetValidationReceiptsInput, ValidationReceip
 ///         .flat_map(|receipt_set| receipt_set.receipts)
 ///         .count();
 ///     info!("Found {} receipts from agent activity authorities", count);
-///     Ok(())
-/// }
+/// #     Ok(())
+/// # }
 /// ```
 pub fn get_validation_receipts(
     input: GetValidationReceiptsInput,

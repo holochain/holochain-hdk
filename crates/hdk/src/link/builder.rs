@@ -11,7 +11,9 @@ use holochain_zome_types::prelude::*;
 ///
 /// # fn main() -> ExternResult<()> {
 ///     let my_base = ActionHash::from_raw_36(vec![0; 36]); // Some base address, this is a dummy address created for the example!
-///     let links = get_links(LinkQuery::try_new(my_base, ..)?, GetStrategy::default())?;
+///     let link_type_filter =
+///         LinkTypeFilter::Dependencies(zome_info()?.zome_types.links.dependencies().collect());
+///     let links = get_links(LinkQuery::new(my_base, link_type_filter), GetStrategy::default())?;
 /// #   Ok(())
 /// # }
 /// ```
@@ -39,7 +41,9 @@ use holochain_zome_types::prelude::*;
 ///
 /// # fn main() -> ExternResult<()> {
 ///     let my_base = ActionHash::from_raw_36(vec![0; 36]); // Some base address, this is a dummy address created for the example!
-///     let links = get_links(LinkQuery::try_new(my_base, ..)?, GetStrategy::Local)?;
+///     let link_type_filter =
+///         LinkTypeFilter::Dependencies(zome_info()?.zome_types.links.dependencies().collect());
+///     let links = get_links(LinkQuery::new(my_base, link_type_filter), GetStrategy::Local)?;
 /// #   Ok(())
 /// # }
 /// ```
