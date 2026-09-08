@@ -1,18 +1,17 @@
 [package]
 name = "holochain_nonce"
-version = "0.8.0-dev.2"
+version.workspace = true
 authors = ["Holochain Core Dev Team <devcore@holochain.org>"]
 edition = "2021"
 description = "This crate is for generating nonces."
 license = "Apache-2.0"
-repository = "https://github.com/holochain/holochain"
+repository.workspace = true
 documentation = "https://docs.rs/holochain_nonce"
 
-# reminder - do not use workspace deps
 [dependencies]
 getrandom = { version = "0.3", default-features = false, features = ["std"] }
-holochain_secure_primitive = { version = "^0.8.0-dev.0", path = "../holochain_secure_primitive", default-features = false }
-holochain_timestamp = { version = "^0.8.0-dev.2", path = "../timestamp" }
+holochain_secure_primitive = { workspace = true }
+holochain_timestamp = { workspace = true }
 subtle-encoding = "0.5"
 ts-rs = { version = "12.0", optional = true, features = ["no-serde-warnings"] }
 
