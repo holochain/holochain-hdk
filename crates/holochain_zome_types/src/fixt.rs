@@ -9,7 +9,7 @@ use holochain_integrity_types::prelude::{
     DeleteData, DeleteLinkData, DnaData, InitZomesCompleteData, OpenChainData, UpdateData,
 };
 use holochain_serialized_bytes::prelude::SerializedBytes;
-use rand::Rng;
+use rand::RngExt;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::convert::TryFrom;
 use std::sync::Arc;
