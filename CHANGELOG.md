@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## \[[0.9.0-dev.1](https://github.com/holochain/holochain-hdk/compare/v0.9.0-dev.0...v0.9.0-dev.1)\] - 2026-09-11
+
+### Automated Changes
+
+- *(deps)* Bump rust-toolchain from 1.96.1 to 1.98.1 by @dependabot[bot] in [#5](https://github.com/holochain/holochain-hdk/pull/5)
+- *(deps)* Bump rand from 0.9.5 to 0.10.2 by @dependabot[bot] in [#10](https://github.com/holochain/holochain-hdk/pull/10)
+- *(deps)* Bump mockall from 0.13.1 to 0.15.0 by @dependabot[bot] in [#11](https://github.com/holochain/holochain-hdk/pull/11)
+- *(deps)* Bump strum_macros from 0.27.2 to 0.28.0 by @dependabot[bot] in [#8](https://github.com/holochain/holochain-hdk/pull/8)
+- *(deps)* Bump Swatinem/rust-cache by @dependabot[bot] in [#6](https://github.com/holochain/holochain-hdk/pull/6)
+- *(deps)* Update schemars requirement from 0.9 to 1.2 by @dependabot[bot] in [#7](https://github.com/holochain/holochain-hdk/pull/7)
+
+### First-time Contributors
+
+- @dependabot[bot] made their first contribution in [#5](https://github.com/holochain/holochain-hdk/pull/5)
+
 ## \[[0.9.0-dev.0](https://github.com/holochain/holochain-hdk/commits/v0.9.0-dev.0)\] - 2026-09-08
 
 ### Features
