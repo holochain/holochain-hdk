@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## \[[0.9.0-dev.2](https://github.com/holochain/holochain-hdk/compare/v0.9.0-dev.1...v0.9.0-dev.2)\] - 2026-09-14
+
+### Build System
+
+- *(deps)* Update HDI crates to 0.9.0-dev.7 by @veeso in [#15](https://github.com/holochain/holochain-hdk/pull/15)
+
+### Documentation
+
+- Describe direct signal grants by @veeso
+
 ## \[[0.9.0-dev.1](https://github.com/holochain/holochain-hdk/compare/v0.9.0-dev.0...v0.9.0-dev.1)\] - 2026-09-11
 
 ### Automated Changes
