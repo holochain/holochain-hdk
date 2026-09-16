@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## \[[0.9.0-dev.3](https://github.com/holochain/holochain-hdk/compare/v0.9.0-dev.2...v0.9.0-dev.3)\] - 2026-09-16
+
+### Build System
+
+- Bump `hdi` to `0.9.0-dev.8` by @veeso in [#20](https://github.com/holochain/holochain-hdk/pull/20)
+
+### Automated Changes
+
+- *(deps)* Bump uuid in the cargo-minor-patch group across 1 directory by @dependabot[bot] in [#18](https://github.com/holochain/holochain-hdk/pull/18)
+- *(deps)* Bump taiki-e/install-action by @dependabot[bot] in [#17](https://github.com/holochain/holochain-hdk/pull/17)
+- Update dependabot.yml with shared content in [#14](https://github.com/holochain/holochain-hdk/pull/14)
+
 ## \[[0.9.0-dev.2](https://github.com/holochain/holochain-hdk/compare/v0.9.0-dev.1...v0.9.0-dev.2)\] - 2026-09-14
 
 ### Build System
