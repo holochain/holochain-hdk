@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## \[[0.9.0-dev.4](https://github.com/holochain/holochain-hdk/compare/v0.9.0-dev.3...v0.9.0-dev.4)\] - 2026-09-16
+
+### Build System
+
+- Bump hdi 0.9.0-dev.9 by @veeso
+
+### Other Changes
+
+- Bump getrandom from 0.3.4 to 0.4.3 by @veeso in [#22](https://github.com/holochain/holochain-hdk/pull/22)
+
 ## \[[0.9.0-dev.3](https://github.com/holochain/holochain-hdk/compare/v0.9.0-dev.2...v0.9.0-dev.3)\] - 2026-09-16
 
 ### Build System
