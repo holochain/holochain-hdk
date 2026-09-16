@@ -9,7 +9,7 @@ repository.workspace = true
 documentation = "https://docs.rs/holochain_nonce"
 
 [dependencies]
-getrandom = { version = "0.3", default-features = false, features = ["std"] }
+getrandom = { version = "0.4", default-features = false, features = ["std"] }
 holochain_secure_primitive = { workspace = true }
 holochain_timestamp = { workspace = true }
 subtle-encoding = "0.5"
