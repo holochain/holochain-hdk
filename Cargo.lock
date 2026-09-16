@@ -573,7 +573,7 @@ dependencies = [
 name = "hdk"
 version = "0.9.0-dev.3"
 dependencies = [
- "getrandom 0.4.3",
+ "getrandom 0.3.4",
  "hdi",
  "hdk_derive",
  "holo_hash",
@@ -661,7 +661,7 @@ dependencies = [
 name = "holochain_nonce"
 version = "0.9.0-dev.3"
 dependencies = [
- "getrandom 0.4.3",
+ "getrandom 0.3.4",
  "holochain_secure_primitive",
  "holochain_timestamp",
  "subtle-encoding",
