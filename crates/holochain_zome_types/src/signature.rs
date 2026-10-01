@@ -102,6 +102,7 @@ impl SignEphemeral {
     derive_more::From,
     derive_more::Into,
 )]
+#[allow(clippy::redundant_field_names)] // false positive from derive_more
 pub struct Signed<T>
 where
     T: serde::Serialize + serde::de::DeserializeOwned,
