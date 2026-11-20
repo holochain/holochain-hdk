@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## \[[0.9.0-dev.5](https://github.com/holochain/holochain-hdk/compare/v0.9.0-dev.4...v0.9.0-dev.5)\] - 2026-11-20
+
+### Miscellaneous Tasks
+
+- *(deps)* Bump hdi to v0.9.0-dev.10 by @jost-s in [#32](https://github.com/holochain/holochain-hdk/pull/32)
+- *(deps)* Bump holochain_wasmer guest and common to 0.0.104 by @jost-s
+- Update the AI_POLICY.md with shared content in [#27](https://github.com/holochain/holochain-hdk/pull/27)
+
+### Automated Changes
+
+- *(deps)* Bump proptest-derive from 0.8.0 to 0.9.0 by @dependabot[bot] in [#31](https://github.com/holochain/holochain-hdk/pull/31)
+- *(deps)* Bump the cargo-minor-patch group with 4 updates by @dependabot[bot] in [#30](https://github.com/holochain/holochain-hdk/pull/30)
+- *(deps)* Bump the updates group with 4 updates by @dependabot[bot] in [#29](https://github.com/holochain/holochain-hdk/pull/29)
+- *(deps)* Bump rust-toolchain from 1.99.0 to 1.99.1 by @dependabot[bot] in [#28](https://github.com/holochain/holochain-hdk/pull/28)
+- *(deps)* Bump rust-toolchain from 1.98.1 to 1.99.0 by @dependabot[bot] in [#25](https://github.com/holochain/holochain-hdk/pull/25)
+- *(deps)* Bump the cargo-minor-patch group with 2 updates by @dependabot[bot] in [#26](https://github.com/holochain/holochain-hdk/pull/26)
+- *(deps)* Bump taiki-e/install-action by @dependabot[bot] in [#24](https://github.com/holochain/holochain-hdk/pull/24)
+
 ## \[[0.9.0-dev.4](https://github.com/holochain/holochain-hdk/compare/v0.9.0-dev.3...v0.9.0-dev.4)\] - 2026-09-16
 
 ### Build System
