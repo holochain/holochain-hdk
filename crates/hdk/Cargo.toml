@@ -14,7 +14,7 @@ edition = "2021"
 hdi = { workspace = true, features = ["trace"] }
 hdk_derive = { workspace = true }
 holo_hash = { workspace = true }
-holochain_wasmer_guest = "=0.0.103"
+holochain_wasmer_guest = "=0.0.104"
 # it's important that we depend on holochain_zome_types with no default
 # features, both here AND in hdk_derive, to reduce code bloat
 holochain_zome_types = { workspace = true }
